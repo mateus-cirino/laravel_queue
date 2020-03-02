@@ -1,78 +1,16 @@
-<p align="center"><img src="https://res.cloudinary.com/dtfbvvkyp/image/upload/v1566331377/laravel-logolockup-cmyk-red.svg" width="400"></p>
+#Este projeto foi criado simplesmente para dar um exemplo do funcionamento da Fila de Tarefas no Laravel 6.x
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
-- [We Are The Robots Inc.](https://watr.mx/)
-- [Understand.io](https://www.understand.io/)
-- [Abdel Elrafa](https://abdelelrafa.com)
-- [Hyper Host](https://hyper.host)
-- [Appoly](https://www.appoly.co.uk)
-- [OP.GG](https://op.gg)
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+##Primeiramente vamos entender o que são os [Jobs][1] no Laravel
+[1]: https://laravel.com/docs/6.x/queues#creating-jobs "Jobs"
+Os jobs nada mais são do que um controller normal que é chamado através do comando `NomeDoJob::dispatch()`.
+Para criar um job execute o comando no terminal `php artisan make:job NomeDoJob`, depois ele irá aparecer no diretório `SuaAplicacao\app\Jobs`. Ao clicar no job irão aparecer dois métodos, o primeiro é o `__construct` que irá ser executado quando o job for chamado e outro que é o `handle` que é de fato onde grande parte da lógica do seu job irá ficar e será executada.
+##Como trabalhar com as [Filas](https://laravel.com/docs/6.x/queues "Filas") do Laravel
+Primeiramente caso queira que após um job ser dispachado colocar ele em uma fila, precisamos rodar o comando `php artisan queue:table` e depois `php artisan migrate` que irá criar as migrations necessárias (serão criadas duas tabelas uma para os jobs e a outra para os jobs que falharam) para se armazenar no banco de dados e mudar o nosso `.env` e no lugar de `QUEUE_CONNECTION=sync` coloque `QUEUE_CONNECTION=database` depois para que sejam executados os jobs que estão na tabela `jobs` basta colocar a fila para ser executada com o comando `php artisan queue:work`.
+###Como isso funciona?
+Sempre que usamos `dispatch` em um `job`, este será [serializado](https://pt.wikipedia.org/wiki/Serializa%C3%A7%C3%A3o "serializado") no banco de dados e quando colocarmos a fila para ser executada ele é deserealizado do banco e executado.
+####Exemplo nesse código do projeto
+Toda vez que criamos um novo usuário no controller `laravel_queue\app\Http\Controllers\Auth\RegisterController.php` no método `create` usamos o `dispatch` do `job` `RegisterUser`.
+Caso resolva testar, certifique-se de que o comando `php artisan queue:work` esteja em execução.
+###Agradecimentos
+[ Leandro Henrique Reis](https://www.youtube.com/watch?v=I0bNbG-lzA8 " Leandro Henrique Reis")
+[Felipe Braiani](http://brtechsistemas.com.br "Felipe Braiani")
